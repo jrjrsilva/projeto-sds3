@@ -1,55 +1,44 @@
-import axios from 'axios';
-import Chart from 'react-apexcharts';
-import { SaleSum } from 'types/sale';
-import { BASE_URL } from 'Utils/Requests';
+import axios from "axios";
+import { useEffect, useState } from "react";
+import Chart from "react-apexcharts";
+import { SaleSum } from "types/sale";
+import { BASE_URL } from "Utils/Requests";
 
-type ChartData ={
-    labels: string[];
-    series: number[];
-}
+type ChartData = {
+  labels: string[];
+  series: number[];
+};
 
-const  DonutChart = () =>{
+const DonutChart = () => {
+  const [chartData, setChartData] = useState<ChartData>({
+    labels: [],
+    series: [],
+  });
 
-    //forma errada
-    let chartdata: ChartData ={
-        labels: [],
-        series: []
-    }
+  useEffect(() => {
+    axios.get(`${BASE_URL}/sales/amount-by-seller`).then((response) => {
+      const data = response.data as SaleSum[];
+      const myLabels = data.map((x) => x.sellerName);
+      const mySeries = data.map((x) => x.sum);
 
-    //forma errada
-    axios.get(`${BASE_URL}/sales/amount-by-seller`)
-        .then( response => {
-            const data = response.data as SaleSum[];
-            const myLabels = data.map(x => x.sellerName);
-            const mySeries = data.map(x => x.sum);
+      setChartData({ labels: myLabels, series: mySeries });
+    });
+  }, []);
 
-            chartdata = {labels: myLabels, series: mySeries}
-            console.log(chartdata);
+  const options = {
+    legend: {
+      show: true,
+    },
+  };
 
-        });
+  return (
+    <Chart
+      options={{ ...options, labels: chartData.labels }}
+      series={chartData.series}
+      type="donut"
+      height="240"
+    />
+  );
+};
 
-
-/* 
-    const mockData = {
-        series: [477138, 499928, 444867, 220426, 473088],
-        labels: ['Anakin', 'Barry Allen', 'Kal-El', 'Logan', 'Padmé']
-    } */
-    
-    const options = {
-        legend: {
-            show: true
-        }
-    }
-    
-    return (
-       <Chart 
-            options={{...options, labels: chartdata.labels}}
-            series={chartdata.series}
-            type="donut"
-            height="240"
-       />
-    );
-  }
-  
-  export default DonutChart;
-  
+export default DonutChart;
